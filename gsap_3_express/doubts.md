@@ -157,3 +157,133 @@ Your understanding of linear algebra is completely correct! Under the hood, CSS 
 * **Rotation** utilizes sine and cosine trigonometric functions within the matrix.
 
 GPUs are explicitly designed to execute thousands of simple matrix multiplications in parallel simultaneously, which is why 3D rendering and CSS transforms are incredibly fast on them compared to the CPU. Even basic modern laptops have integrated graphics (iGPUs) built directly into the CPU chip. While an iGPU might only have 500MB of shared memory, rendering a 4x4 matrix calculation for a 2D CSS `scale` requires virtually zero memory overhead. Any machine manufactured in the last 15 years can process CSS hardware acceleration effortlessly.
+
+## schronding@StormTrooper:~/repos/creative_coding_club/gsap_3_express/04_eases
+
+### Doubt 10 - The Creative Coding Club Instructor (index_2.html - Comment 4)
+
+#### User's Discovery/Doubt:
+
+#### Explanation:
+
+His name is **Carl Schooff**! He is a former GreenSock employee and the creator of the Creative Coding Club. You noticed an excellent pedagogical technique: by providing a static or linearly moving "ghost" reference point alongside animated elements, it becomes significantly easier for the human eye to perceive acceleration, deceleration, and the specific curvature of different easing algorithms.
+
+---
+
+### Doubt 11 - Zero-Duration Tweens vs. `gsap.set()` (script.js - Comment 0)
+
+#### User's Discovery/Doubt:
+
+> /*0. gsap.to(".pink", {duration:0, x:600, ease:"linear"});
+> It seems that some easy way to make things appear from one place to another is by using `duration:0` */
+
+#### Explanation:
+
+Your observation is 100% correct. Setting `duration: 0` instantly teleports the element to the target values, acting as an immediate state change rather than an animation over time.
+Because this is such a common use case, GSAP has a dedicated, built-in method for this exact behavior: **`gsap.set()`**.
+Writing `gsap.set(".pink", {x: 600});` operates exactly like a zero-duration `gsap.to()` tween, but it is slightly more performant and makes your code cleaner and more semantic.
+
+---
+
+### Doubt 12 - The Math Behind `ease: "back"` (script.js - Comment 1)
+
+#### User's Discovery/Doubt:
+
+> /*1. gsap.to(".green", {duration:3, x:600, ease:"back(6)"});
+> I wonder what the `ease:"back(6)"` tells the browser... how does 6 translate into 400 extra pixels? I want to think that the 6 tells the tween to go beyond 0.6 pixels of the distance he traveled... Maybe for each 1 the tween moves an extra 50 pixels in the `ease:"back"`. */
+
+#### Explanation:
+
+The number inside the `back()` configuration does not map directly to pixels or a flat percentage of the total distance. Instead, it represents the **tension or amplitude** of the Bezier curve that calculates the overshoot.
+By default, if you just write `ease: "back"`, GSAP uses a tension of `1.7`, which results in roughly a 10% overshoot. When you crank that number up to `6`, you are aggressively multiplying the tension of the mathematical curve, telling the animation to launch itself massively past its destination coordinate (`x: 600`) before snapping back. It is a mathematical curve configuration, which is why it doesn't cleanly translate to a strict "50 pixels per integer."
+
+---
+
+### Doubt 13 - Redundant Properties in JavaScript Objects (script.js - Comment 4)
+
+#### User's Discovery/Doubt:
+
+> /*4.
+> gsap.to(".green", {duration:3, x:600, ease:"power1"});
+> gsap.to(".pink", {duration:3, x:600, ease:"power2"});
+> gsap.to(".green", {duration:3, x:600, ease:"power3"});
+> gsap.to(".pink", {duration:3, x:600, ease:"power4"});
+> It seems that if I have a redudant ease (as it is the case here in which I describe different eases for the same class) the one that is actually applied is the last one. */
+
+#### Explanation:
+
+This is not a GSAP-specific behavior; this is a foundational rule of **JavaScript Execution Order**.
+JavaScript is read sequentially from top to bottom. When you target `.green` with `power1` and then immediately target `.green` with `power3` a few lines later, GSAP starts the first tween, but milliseconds later, the second tween overwrites the first one because they are competing for control over the exact same property (`x`) on the exact same HTML element (`.green`). The last instruction always wins.
+
+---
+
+### Doubt 14 - The Illusion of "power5" and GSAP Defaults (script.js - Comments 5 & 8)
+
+#### User's Discovery/Doubt:
+
+> /*5. ...except in the case of `power5` which looks pretty much like a `linear` ease. In fact, it is a bit slower than `power1`. */
+> /*8. ...I can still say that `sine` feels very much alike the `power1` and `power5` eases. */
+
+#### Explanation:
+
+You experienced a very clever illusion here! **`power5` does not exist in GSAP.**
+
+GSAP's core power eases mathematically stop at 4:
+
+* `power1` (Quadratic)
+* `power2` (Cubic)
+* `power3` (Quartic)
+* `power4` (Quintic)
+
+When you feed GSAP a string that it doesn't recognize (like `"power5"`), it doesn't crash your program. Instead, it quietly throws away the invalid string and applies its global **Default Ease**.
+In GSAP 3, the default ease is `power1.out` (not `back.out`!). This is exactly why you thought `power5` looked slightly slower than `power1` and very similar to `sine`—because you were literally just watching a standard `power1.out` animation fallback!
+
+---
+
+### Doubt 15 - Unrecognized Eases and Missing Plugins (script.js - Comments 10, 13, & 14)
+
+#### User's Discovery/Doubt:
+
+> /*10. ...The `steps` ease seems to need a number by default... I think that when GSAP doesn't recognize an ease (which makes sense, as these are not part of the core package) it simply replaces it with the default which is `back.out` if I remember correctly. */
+> /*13. ...the ones that actually allow a lot of customatization are the ones that were explicitly created to do so, such as `CustomEase`... */
+> /*14. Indeed none of these work. I wonder how you enable them. I assume it is by putting the url of the GSAP code (which I don't think it is open source) in a `<script>` tag. */
+
+#### Explanation:
+
+You nailed the diagnosis completely!
+
+1. **Stepped Easing:** `steps(n)` mathematically divides the animation into harsh, distinct jumps (like a ticking clock or a CSS sprite sheet). Without providing `n` (the number of steps), the function breaks, and GSAP falls back to the default ease (which is `power1.out`).
+2. **Missing Plugins:** Standard eases (power, back, elastic, bounce, sine, circ, expo) are bundled into the core `gsap.min.js` file. However, advanced customizable eases like `CustomEase`, `CustomWiggle`, `RoughEase`, and `SlowMo` require external plugin files. You are correct that you must include them via additional `<script>` tags. While `CustomEase` is completely free (requires a free GreenSock account to download), things like `CustomWiggle` and `CustomBounce` are premium perks for paying "Club GSAP" members.
+
+---
+
+### Doubt 16 - Linear Easing and Web Standards (script.js - Comment 12)
+
+#### User's Discovery/Doubt:
+
+> /*12. ...A `linear` ease is the same as not having any ease whatsoever (`none`). This was probably just a decision that the developers took in order to make the library more intuitive (which I wonder what its current state is, as I have heard that CSS is beginning to copy a lot of GSAP great features and putting them as a native part of the language... */
+
+#### Explanation:
+
+Yes, `ease: "none"` and `ease: "linear"` are mathematically identical aliases in GSAP. They mean the animation progresses at a constant, unvarying speed with absolutely zero acceleration or deceleration.
+
+Regarding your thoughts on the web ecosystem: CSS and the native Web Animations API (WAAPI) have indeed copied a massive amount of functionality pioneered by GSAP over the last 15 years (like Keyframes, CSS Variables for transforms, and basic scroll-timeline functionality). However, GSAP remains the industry standard because it handles brutal cross-browser inconsistencies (like SVG transform origins in Safari), offers complex motion path drawing, morphing, and physics-based sequencing that CSS simply cannot execute mathematically yet.
+
+---
+
+### Doubt 17 - Easing Nuances and Power Curves (script.js - Comments 2, 3, & 6)
+
+#### User's Discovery/Doubt:
+
+> /*2. ...The curves in the ease visualizer look almost the same and it is not until I compare these 2 that I can clearly see that `power2` goes faster at the beginning that `power1` */
+> /*3. I actually like `power3` and `power4`. It is as if they "jumped" with force  */
+> /*6. `bounce` and `elastic` are very over the top, but the other 3 seem practically just like another version of `power1` ease at different speeds... */
+
+#### Explanation:
+
+Your visual analysis of the curves is perfect. The `power` eases are designed specifically for this purpose: providing a scalable curve of "force."
+
+* `power1` and `sine` are very gentle, mimicking light physical friction.
+* `power3` and `power4` (along with `expo`) have extremely steep Bezier curves. They accelerate aggressively (the "jump with force" you noticed) and then decelerate dramatically, making the object feel heavy and snappy.
+
+Using multiple ghost objects alongside each other (like Carl did) is exactly how professional motion designers compare these subtle speed variations to find the perfect mechanical "feel" for their UI elements.

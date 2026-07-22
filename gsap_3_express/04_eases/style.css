@@ -1,0 +1,26 @@
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body { 
+    background-color: #121212; 
+    color: #ffffff; 
+    font-family: sans-serif;
+    padding: 2rem; 
+}
+
+.box { 
+    width: 100px; 
+    height: 100px; 
+    background-color: #0ae448; 
+    margin-top: 2rem; 
+    border-radius: 8px;
+}
+
+body {  background:#0a5b90;
+}
+img {
+  display:block;
+}
