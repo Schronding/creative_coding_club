@@ -1,0 +1,26 @@
+body {
+  font-family: 'Kanit', sans-serif;
+  background:#252525;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+#demo {
+  position:relative;
+  width:800px;
+  height:410px;
+  border:1px solid #333;
+  background:url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/32887/space-background.png);
+}
+
+#freds {
+  position:relative;
+  top:300px;
+  left:20px;
+}
+
+#freds img {
+  width:122px;
+}
+
