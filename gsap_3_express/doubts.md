@@ -385,3 +385,56 @@ If you want animations to wait their turn and play sequentially, you must chain 
 `gsap.timeline().to(...).to(...).to(...);`
 
 And to answer your final question: Yes! You can absolutely read specific values inside an object using dot notation (e.g., `console.log(sndStaggerVar.amount)` will output `3`).
+
+## schronding@StormTrooper:~/repos/creative_coding_club/gsap_3_express/06_bug_challenge$
+
+### Doubt 24 - The Math Behind "circ" Easing (script.js - Comment 0)
+#### User's Discovery/Doubt:
+/*0. How interesting that indeed the ease `circ` is being used to fill a circle. */
+#### Explanation:
+You made a great connection! `circ` stands for "Circular Easing". Under the hood, the mathematical curve of this ease literally follows the arc of a circle (using square root formulas). It feels highly natural for animating expanding circles or spheres because the rate of acceleration perfectly matches the geometric expansion of a radius.
+
+### Doubt 25 - State Corruption with `.from()` (script.js - Comments 1 & 4)
+#### User's Discovery/Doubt:
+/*1. gsap.from(bg, {scale:0, duration:1, ease:"circ"})
+What I notice is that the size of the small circle that grows depends on which state it was before I return the mouse to hover again. This makes me think that when I hover GSAP believes that limited state was the whole, so the animation continues until it grows to that new false state... */
+/*4. Indeed the problem is that `from()` animates from the known values, but when you go over quickly you change the final scale of the tween... Another way to solve the problem is by using `fromTo()`... */
+#### Explanation:
+Your analysis is absolutely flawless! You have discovered one of the most common pitfalls in GSAP: **State Corruption** when using `.from()` in interactive events. 
+When `.from()` is called, it immediately records the *current* property value (e.g., `scale: 0.5`) and uses it as the hardcoded destination. If you interrupt the animation by moving your mouse in and out quickly, GSAP reads that interrupted, halfway state as the new 100% destination. By the third or fourth hover, the destination scale has shrunk entirely! As you brilliantly concluded, `fromTo()` solves this permanently by forcing both the starting and ending values, regardless of when it gets interrupted.
+
+### Doubt 26 - JavaScript Events: `mouseenter` vs `hover` (script.js - Comment 2)
+#### User's Discovery/Doubt:
+/*2. ...I assume the difference between `mouseenter` and `hover` is that the former is a trigger that executes each time the mouse enters a certain area and only triggers again when it goes outside and inside once again, while `hover` is something that triggers once and continues to trigger as long as the mouse is in there. While `hover` doesn't sound performative, I would like to know if that is actually the way it is implemented... */
+#### Explanation:
+Your logic makes complete sense, but there is a surprising twist in web development: **JavaScript does not have a native `hover` event!**
+Native JavaScript events include `mouseenter`, `mouseleave`, `mouseover`, and `mouseout`. 
+When you hear developers talk about `hover`, they are usually referring to the CSS `:hover` pseudo-class, or a helper method from the jQuery library (`.hover()`). The jQuery `.hover()` method is actually just a shortcut that binds a `mouseenter` and `mouseleave` event simultaneously under the hood. 
+`mouseenter` triggers exactly once when the cursor crosses the boundary. To reverse an animation cleanly, you pair it with a `mouseleave` event trigger.
+
+### Doubt 27 - Performance and Garbage Collection (script.js - Comment 5)
+#### User's Discovery/Doubt:
+/* 5. Indeed it works. No matter how quickly you go out and return the animation always plays all the way through the end. However as we are creating a different tween each time the mouse goes in and out of the circle I imagine this version performs worse. */
+#### Explanation:
+Spot on again. Every time your mouse enters the circle, the browser creates a brand new Tween object in memory. When it finishes, the browser's Garbage Collector has to sweep it away. Doing this rapidly causes micro-stutters.
+The professional, highly performant way to handle hover effects is to create the tween **once** outside the event listener, paused:
+`const hoverTween = gsap.to(bg, {scale: 1, duration: 1, ease: "circ", paused: true});`
+Then, inside your event listeners, you simply control the playback head to move it forward and backward:
+`button.addEventListener("mouseenter", () => hoverTween.play());`
+`button.addEventListener("mouseleave", () => hoverTween.reverse());`
+
+### Doubt 28 - Easing Placement in `fromTo` (script.js - Comments 6, 8, & 9)
+#### User's Discovery/Doubt:
+/*6. I have a doubt. In `fromTo()` it doesn't matter where I put the ease?... */
+/*9. ...This makes me think that when you put an ease in the "from vars object" GSAP just gets confused and defaults it to `ease:linear`. */
+#### Explanation:
+You actually stumbled upon this exact same concept in your previous `03_from_fromTo` project! 
+In a `fromTo()` tween, the first object (`from`) is strictly for static starting coordinates. The second object (`to`) is where you place the destination coordinates **and** all playback instructions (duration, delay, ease). 
+When you put `ease: "elastic"` inside the `from` object, GSAP completely ignores it because you cannot define the speed or curve of a starting position. Since the `to` object was missing an ease, GSAP silently fell back to its global default ease (`power1.out`, which looks very similar to `linear`).
+
+### Doubt 29 - Chrome DevTools Mobile Simulator (script.js - Comment 11)
+#### User's Discovery/Doubt:
+/*11. ...I tried with chrome web dev tools and I don't know if it was because I was in responsive, but I tried to use my mouse normally and instead I have a strange gray concentric circle instead of the mouse. */
+#### Explanation:
+You accidentally toggled Chrome's **Device Toolbar** (Mobile Simulator)! 
+When testing responsive views in DevTools, Chrome changes your cursor to a gray concentric circle to simulate a **touchscreen finger tap** instead of a precise mouse cursor. Touchscreens do not have a "hover" state because fingers cannot hover over glass. This means Chrome actively suppresses `mouseenter` events while in this mode, which is why your animation testing suddenly stopped working normally! You can easily disable it by clicking the little phone/tablet icon in the top left corner of the DevTools window.
