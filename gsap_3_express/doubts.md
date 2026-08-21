@@ -438,3 +438,72 @@ When you put `ease: "elastic"` inside the `from` object, GSAP completely ignores
 #### Explanation:
 You accidentally toggled Chrome's **Device Toolbar** (Mobile Simulator)! 
 When testing responsive views in DevTools, Chrome changes your cursor to a gray concentric circle to simulate a **touchscreen finger tap** instead of a precise mouse cursor. Touchscreens do not have a "hover" state because fingers cannot hover over glass. This means Chrome actively suppresses `mouseenter` events while in this mode, which is why your animation testing suddenly stopped working normally! You can easily disable it by clicking the little phone/tablet icon in the top left corner of the DevTools window.
+
+## schronding@StormTrooper:~/repos/creative_coding_club/gsap_3_express/07_basic_timeline
+
+### Doubt 30 - `autoAlpha` vs `opacity` (`script.js` - Comments 0 & 1)
+
+#### User's Discovery/Doubt:
+
+> /*0. I assume alpha has to do something with opacity, as I think there was something in CSS that was used in order to dissipate the colors in RGB format.  */
+> /*1. In terms of the actual effect being shown it indeed looks like `autoAlpha` serves as a way to introduce blinking to the animation. */
+> 
+> 
+
+#### Explanation:
+
+Your assumption is completely correct! In color theory (like RGBA), "Alpha" represents the transparency channel.
+
+However, GSAP's `autoAlpha` is a very special, heavily optimized property. While `{opacity: 0}` strictly animates the standard CSS `opacity` value, `{autoAlpha: 0}` does two things simultaneously: it animates the `opacity` to `0`, and once it mathematically hits zero, it automatically changes the CSS `visibility` property to `hidden`.
+
+This is vastly superior for web performance and user experience. An element that is only `opacity: 0` is still physically present on the page—it can block mouse clicks and is still read by screen readers. By using `autoAlpha`, the element is completely removed from interactivity (`visibility: hidden`) when invisible, creating a clean fade-in ("blinking") effect when brought back.
+
+---
+
+### Doubt 31 - Simultaneous Property Animation (`script.js` - Comment 2)
+
+#### User's Discovery/Doubt:
+
+> /*2. The effect of the title looks quite well even though it is very simple. It appears and grows simultaneously. */
+> 
+> 
+
+#### Explanation:
+
+Yes! This highlights one of the core foundational strengths of the GSAP engine. By placing multiple distinct CSS transforms into the exact same variables object (e.g., `opacity: 0` and `scale: 0`), GSAP automatically synchronizes their execution. The browser's GPU calculates the fade-in and the scaling concurrently over the default duration, perfectly easing both properties together without any complex CSS `@keyframes` configuration needed from you.
+
+---
+
+### Doubt 32 - Stagger Overlap vs Sequential Delay (`script.js` - Comment 3)
+
+#### User's Discovery/Doubt:
+
+> /*3. The animation above seems to simply describe each of the freds coming from below... I thought each fred would have finished settling into their position before the next one even started moving. I think that the mismatch between what I thought would happen and what actually happened is that we are using `stagger` instead of `delay`. */
+> 
+> 
+
+#### Explanation:
+
+Your deduction is absolutely flawless!
+
+The `stagger: 0.1` property tells GSAP: *"Wait exactly 0.1 seconds between the **start** of each element's animation"*. Since the overall `duration` of the tween is `0.8` seconds, the second Fred starts moving while the first Fred is only 12.5% of the way through its animation. This heavy overlap creates the fluid, wave-like motion.
+
+If you wanted them to play strictly sequentially (one finishing entirely before the next begins), you could easily achieve that by setting the stagger time to match the duration exactly: `stagger: 0.8`.
+
+---
+
+### Doubt 33 - Animation Physics: Speed, Distance, and Time (`script.js` - Comment 4)
+
+#### User's Discovery/Doubt:
+
+> /*4. In this I think the `#time` box will come out of the visible screen and set up in its correct position very quickly... I find it important to note that while every value above 100 in `xPercent` would work, I imagine that visually I would get something faster than the actual `duration:0.2` as the distance increased but the time remained the same. */
+> 
+> 
+
+#### Explanation:
+
+You have perfectly derived the fundamental physics of web animation: **Speed = Distance / Time**.
+
+Because GSAP locks the animation to the strict timeframe you provide (`duration: 0.2`), increasing the distance (`xPercent: 500` instead of `100`) forces the browser to move the element across a much larger physical space in the exact same 200 milliseconds. This results in a visually much higher velocity.
+
+Additionally, using `xPercent: 100` is a highly responsive CSS trick. It mathematically dictates: *"Move this element exactly 100% of its own physical width."* It is universally preferred over hardcoded pixel values (like `x: 300`) because it guarantees the element slides entirely out of view smoothly, regardless of how large or small the user's screen is!

@@ -1,0 +1,61 @@
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
+body { 
+    background-color: #121212; 
+    color: #ffffff; 
+    font-family: sans-serif;
+    padding: 2rem; 
+}
+
+.box { 
+    width: 100px; 
+    height: 100px; 
+    background-color: #0ae448; 
+    margin-top: 2rem; 
+    border-radius: 8px;
+}
+
+body {
+  color:white;
+  font-family: 'Kanit', sans-serif;
+  background:#020202;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+#demo {
+  overflow:hidden;
+  position:relative;
+  width:800px;
+  height:410px;
+  border:1px solid #333;
+  background:url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/32887/space-background.png);
+
+}
+
+#title {
+  position:absolute;
+  top:120px;
+  left:40px;
+}
+
+#freds {
+  position:absolute;
+  top:250px;
+  left:20px;
+}
+
+#freds img {
+  width:122px;
+}
+
+#time {
+  position:absolute;
+  top:25px;
+  right:0;
+}
